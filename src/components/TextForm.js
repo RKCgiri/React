@@ -1,60 +1,98 @@
-import React,{useState} from 'react'
-
-
+import React, { useState } from 'react';
 
 export default function TextForm(props) {
-    const [text , setText ] = useState('');
-    // text="New Text"; //wrong way to change the state
-    //  setText("New Text"); //correct way
-    const handelUpClick=()=>{
-        // console.log("Upper Case is Clicked :"+text);
-        let newText= text.toUpperCase();
-        setText(newText);
+    const [text, setText] = useState('');
+
+    // Convert text to uppercase
+    const handleUpClick = () => {
+        setText(text.toUpperCase());
     };
-    const handelLowClick=()=>{
-        // console.log("Upper Case is Clicked :"+text);
-        let newText= text.toLowerCase();
-        setText(newText);
+
+    // Convert text to lowercase
+    const handleLowClick = () => {
+        setText(text.toLowerCase());
     };
-    const handelClear=()=>{
-        // console.log("Upper Case is Clicked :"+text);
-        let newText= '';
-        setText(newText);
+
+    // Clear all text
+    const handleClear = () => {
+        setText('');
     };
-    const handleOnChange=(event)=>{
-        // console.log("Handel on change");
+
+    // Update text as user types
+    const handleOnChange = (event) => {
         setText(event.target.value);
     };
-    const handelCopy=(event)=>{
-        console.log("I am Coping");
-        let text =document.getElementById("myBox");
-        text.select();
-        navigator.clipboard.writeText(text.value);
+
+    // Copy text to clipboard with fallback for older browsers
+    const handleCopy = () => {
+        if (!text.trim()) {
+            alert('No text to copy!');
+            return;
+        }
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Text copied to clipboard!'))
+                .catch(err => console.error('Failed to copy text:', err));
+        } else {
+            // Fallback method for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Text copied (fallback method used)');
+        }
     };
-    const handelSpace=()=>{
-        let newText= text.split(/[ ]+/);
-        setText(newText.join(" "));
-    }
+
+    // Remove extra spaces (leading, trailing, and multiple spaces between words)
+    const handleSpace = () => {
+        let newText = text.trim().split(/[ ]+/).join(" ");
+        setText(newText);
+    };
+
+    // Word count (filter out empty words caused by extra spaces)
+    const wordCount = text.trim().split(/\s+/).filter((element) => element.length !== 0).length;
+
+    // Character count excluding spaces
+    const charCountWithoutSpaces = text.replace(/\s+/g, '').length;
+
+    // Estimated reading time (200 words per minute)
+    const readingTime = (wordCount / 200).toFixed(2);
+
     return (
         <>
-        <div className='container'>
-            <h1>{props.heading} </h1>
-            <div className="mb-3">
-                <textarea className="form-control" value={text} onChange={handleOnChange} id="myBox" rows="9"></textarea>
+            <div className='container' style={{ color: props.mode === 'light' ? 'black' : 'white' }}>
+                <h1>{props.heading}</h1>
+                <div className="mb-3">
+                    <textarea
+                        className="form-control"
+                        value={text}
+                        onChange={handleOnChange}
+                        style={{
+                            backgroundColor: props.mode === 'dark' ? 'gray' : 'white',
+                            color: props.mode === 'dark' ? 'white' : 'black'
+                        }}
+                        id="myBox"
+                        rows="9"
+                    ></textarea>
+                </div>
+                <button className="btn btn-primary mx-2 my-1" onClick={handleUpClick}>Convert to UpperCase</button>
+                <button className="btn btn-primary mx-2 my-1" onClick={handleLowClick}>Convert to LowerCase</button>
+                <button className="btn btn-primary mx-2 my-1" onClick={handleClear}>Clear All</button>
+                <button className="btn btn-primary mx-2 my-1" onClick={handleCopy}>Copy Text</button>
+                <button className="btn btn-primary mx-2 my-1" onClick={handleSpace}>Remove Extra Spaces</button>
             </div>
-             <button className="btn btn-primary mx-2" onClick={handelUpClick}>Convert to UpperCase</button>
-             <button className="btn btn-primary mx-2" onClick={handelLowClick}>Convert to LowerCase</button>
-             <button className="btn btn-primary mx-2" onClick={handelClear}>Clear All</button>
-             <button className="btn btn-primary mx-2" onClick={handelCopy}>Copy Text</button>
-             <button className="btn btn-primary mx-2" onClick={handelSpace}>Remove Extra Spaces</button>
-        </div>
-        <div className="container my-3" >
-            <h1>Text Summery</h1>
-            <p>  {text.split(" ").length} words and {text.length} charecters</p>
-            <p>{ 0.009*text.split(" ").length} time taken to read</p>
-            <h1>Preview</h1>
-            <p>{text}</p>
-        </div>
+
+            <div className="container my-3" style={{ backgroundColor: props.mode === 'dark' ? 'gray' : 'white' }}>
+                <h1>Text Summary</h1>
+                <p>{wordCount} words and {text.length} characters</p>
+                <p>{charCountWithoutSpaces} characters (excluding spaces)</p>
+                <p>{readingTime} minutes to read</p>
+                <h1>Preview</h1>
+                <p>{text.length > 0 ? text : "Nothing to preview."}</p>
+            </div>
         </>
-    )
+    );
 }
